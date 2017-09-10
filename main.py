@@ -31,6 +31,10 @@ class Manifest(DataTemplate):
     model_number = ndb.IntegerProperty()
     author = ndb.StringProperty()
 
+    @classmethod
+    def query_manifest(cls):
+        return cls.query().order(cls.model_number)
+
     # [ port methods ]
     def add(self, content):
         port = Port(parent=self.key,
@@ -64,27 +68,25 @@ class AddManifest(webapp2.RequestHandler):
             model_number += 1
             existing_manifest = Manifest.query(Manifest.model_number == model_number).get()
 
-        name = self.request.get('name')
-        description = self.request.get('description')
-        author = self.request.get('author')
         manifest = Manifest(
                     model_number=model_number,
-                    name=name,
-                    description=description,
-                    author=author)
+                    name=self.request.get('name'),
+                    description=self.request.get('description'),
+                    author=self.request.get('author'))
         manifest.put()
 # [ End AddManifest ]
 
 
 # [ Start AddPort ]
 class AddPort(webapp2.RequestHandler):
-    def post(self, model_id):
-        manifest = Manifest.get_by_id(model_id)
-        content = {'port_number': self.request.get('port_number'),
+    def post(self, model_number):
+        manifest = Manifest.query(Manifest.model_number == long(model_number)).get()
+        content = {'port_number': long(self.request.get('port_number')),
                    'name': self.request.get('name'),
                    'description': self.request.get('description'),
                    'permission': self.request.get('permission'),
                    'type': self.request.get('type')}
+
         manifest.add(content)
 # [ End AddPort ]
 
@@ -96,5 +98,5 @@ class MainHandler(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/api/manifest/addmanifest', AddManifest),
-    ('/api/manifest/addport', AddPort)
+    ('/api/manifest/addport/(\d+)', AddPort)
 ], debug=True)
