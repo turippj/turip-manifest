@@ -101,8 +101,6 @@ class AddManifest(webapp2.RequestHandler):
         json_file.key.delete()
 
         self.response.write('Upload Manifest success!')
-
-
 # [ End AddManifest ]
 
 
