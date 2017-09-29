@@ -21,6 +21,7 @@ import urllib
 import json
 import webapp2
 import jinja2
+from collections import OrderedDict
 from google.appengine.ext import ndb
 
 
@@ -70,17 +71,11 @@ class Port(DataTemplate):
 # [ End Port ]
 
 
-# [ Start JsonFile ]
-class JsonFile(ndb.Model):
-    file_data = ndb.BlobProperty()
-# [ End JsonFile ]
-
-
 # [ Start AddManifest ]
 class AddManifest(webapp2.RequestHandler):
-    def get(self, json_id):
-        json_file = JsonFile.get_by_id(long(json_id))
-        file = json.loads(json_file.file_data)
+    def post(self):
+        json_file = str(self.request.get('file_data'))
+        data = json.loads(json_file)
 
         model_number = 65535  # The first free model_number
         existing_manifest = Manifest.query(Manifest.model == model_number).get()
@@ -90,29 +85,46 @@ class AddManifest(webapp2.RequestHandler):
 
         manifest = Manifest(
                     model=model_number,
-                    name=file['name'],
-                    description=file['description'],
-                    author=file['author'])
+                    name=data['name'],
+                    description=data['description'],
+                    author=data['author'])
         manifest.put()
 
-        for port in file['port']:
+        for port in data['port']:
             manifest.add(port)
-
-        json_file.key.delete()
 
         self.response.write('Upload Manifest success!')
 # [ End AddManifest ]
 
 
-# [ Start UploadJson ]
-class UploadJson(webapp2.RequestHandler):
-    def post(self):
-        file_data = str(self.request.get('file_data'))
-        manifest_file = JsonFile()
-        manifest_file.file_data = file_data
-        manifest_file.put()
-        self.redirect('/api/manifest/addmanifest/' + str(manifest_file.key.id()))
-# [ End UploadJson ]
+# [ Start SearchManifest ]
+class SearchManifest(webapp2.RequestHandler):
+    def get(self):
+        model = self.request.get('model')
+        manifest = Manifest.query(Manifest.model == long(model)).get()
+
+        output_data = OrderedDict()
+        output_data['model'] = manifest.model
+        output_data['name'] = manifest.name
+        output_data['author'] = manifest.author
+        output_data['description'] = manifest.description
+        output_data['port'] = []
+
+        ports = Port.query(ancestor=manifest.key).order(Port.number).fetch()
+
+        for num in range(len(ports)):
+            port = OrderedDict()
+            port['number'] = ports[num].number
+            port['name'] = ports[num].name
+            port['description'] = ports[num].description
+            port['permission'] = ports[num].permission
+            port['type'] = ports[num].type
+
+            output_data['port'].append(port)
+
+        output_json = json.dumps(output_data)
+        self.response.write(output_json)
+# [ End SearchManifest ]
 
 
 # [ Start AddManifestPage ]
@@ -129,7 +141,7 @@ class MainHandler(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
-    ('/api/manifest/uploadjson', UploadJson),
-    ('/api/manifest/addmanifest/(\d+)', AddManifest),
+    ('/api/manifest/add_manifest', AddManifest),
+    ('/api/manifest/search_manifest', SearchManifest),
     ('/upload/manifest', UploadManifestPage)
 ], debug=True)
