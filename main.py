@@ -15,11 +15,22 @@
 # limitations under the License.
 #
 
+import os
+import cgi
+import urllib
+import json
 import webapp2
+import jinja2
 from google.appengine.ext import ndb
 
 
-# [ Start DataTemplate ]s
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
+
+
+# [ Start DataTemplate ]
 class DataTemplate(ndb.Model):
     name = ndb.StringProperty()
     description = ndb.StringProperty()
@@ -28,17 +39,17 @@ class DataTemplate(ndb.Model):
 
 # [ Start Manifest ]
 class Manifest(DataTemplate):
-    model_number = ndb.IntegerProperty()
+    model = ndb.IntegerProperty()
     author = ndb.StringProperty()
 
     @classmethod
     def query_manifest(cls):
-        return cls.query().order(cls.model_number)
+        return cls.query().order(cls.model)
 
     # [ port methods ]
     def add(self, content):
         port = Port(parent=self.key,
-                    port_number=content['port_number'],
+                    number=content['number'],
                     name=content['name'],
                     description=content['description'],
                     permission=content['permission'],
@@ -53,42 +64,65 @@ class Manifest(DataTemplate):
 
 # [ Start Port ]
 class Port(DataTemplate):
-    port_number = ndb.IntegerProperty()
+    number = ndb.IntegerProperty()
     permission = ndb.StringProperty()
     type = ndb.StringProperty()
 # [ End Port ]
 
 
+# [ Start JsonFile ]
+class JsonFile(ndb.Model):
+    file_data = ndb.BlobProperty()
+# [ End JsonFile ]
+
+
 # [ Start AddManifest ]
 class AddManifest(webapp2.RequestHandler):
-    def post(self):
+    def get(self, json_id):
+        json_file = JsonFile.get_by_id(long(json_id))
+        file = json.loads(json_file.file_data)
+
         model_number = 65535  # The first free model_number
-        existing_manifest = Manifest.query(Manifest.model_number == model_number).get()
+        existing_manifest = Manifest.query(Manifest.model == model_number).get()
         while existing_manifest is not None:
             model_number += 1
-            existing_manifest = Manifest.query(Manifest.model_number == model_number).get()
+            existing_manifest = Manifest.query(Manifest.model == model_number).get()
 
         manifest = Manifest(
-                    model_number=model_number,
-                    name=self.request.get('name'),
-                    description=self.request.get('description'),
-                    author=self.request.get('author'))
+                    model=model_number,
+                    name=file['name'],
+                    description=file['description'],
+                    author=file['author'])
         manifest.put()
+
+        for port in file['port']:
+            manifest.add(port)
+
+        json_file.key.delete()
+
+        self.response.write('Upload Manifest success!')
+
+
 # [ End AddManifest ]
 
 
-# [ Start AddPort ]
-class AddPort(webapp2.RequestHandler):
-    def post(self, model_number):
-        manifest = Manifest.query(Manifest.model_number == long(model_number)).get()
-        content = {'port_number': long(self.request.get('port_number')),
-                   'name': self.request.get('name'),
-                   'description': self.request.get('description'),
-                   'permission': self.request.get('permission'),
-                   'type': self.request.get('type')}
+# [ Start UploadJson ]
+class UploadJson(webapp2.RequestHandler):
+    def post(self):
+        file_data = str(self.request.get('file_data'))
+        manifest_file = JsonFile()
+        manifest_file.file_data = file_data
+        manifest_file.put()
+        self.redirect('/api/manifest/addmanifest/' + str(manifest_file.key.id()))
+# [ End UploadJson ]
 
-        manifest.add(content)
-# [ End AddPort ]
+
+# [ Start AddManifestPage ]
+class UploadManifestPage(webapp2.RequestHandler):
+    def get(self):
+        template = JINJA_ENVIRONMENT.get_template('manifest.html')
+        self.response.write(template.render())
+# [ End AddManifestPage ]
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -97,6 +131,7 @@ class MainHandler(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
-    ('/api/manifest/addmanifest', AddManifest),
-    ('/api/manifest/addport/(\d+)', AddPort)
+    ('/api/manifest/uploadjson', UploadJson),
+    ('/api/manifest/addmanifest/(\d+)', AddManifest),
+    ('/upload/manifest', UploadManifestPage)
 ], debug=True)

@@ -17,18 +17,11 @@ class TestHandlers(unittest.TestCase):
         ndb.get_context().clear_cache()
 
     def test_AddManifestAndPort(self):
-        # AddManifest
-        post_contents1 = {'name': 'LED', 'description': 'LED light', 'author': 'MakTak'}
-        request = webapp2.Request.blank('/api/manifest/addmanifest', POST=post_contents1)
+        test_file = open('./test.json', 'r')
+        post_contents = test_file.read()
+        request = webapp2.Request.blank('/api/manifest/uploadjson', POST=post_contents)
         response = request.get_response(main.app)
-        self.assertEqual(response.status_int, 200)
-
-        # AddPort
-        post_contents2 = {'port_number': '1', 'name': 'red', 'description': 'red LED',
-                         'permission': 'RW', 'type': 'int16'}
-        request = webapp2.Request.blank('/api/manifest/addport/65535', POST=post_contents2)
-        response = request.get_response(main.app)
-        self.assertEqual(response.status_int, 200)
+        self.assertEqual(response.status_int, 302)
 
     def tearDown(self):
         self.testbed.deactivate()

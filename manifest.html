@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Manifest Page</title>
+</head>
+<body>
+    <form action="/api/manifest/uploadjson" method="post" enctype="multipart/form-data">
+        <input id="UploadJson" name="file_data" type="file" />
+        <button class="btn btn-default" type="submit">Upload ManifestFile</button>
+    </form>
+</body>
+</html>
+{% endautoescape %}
