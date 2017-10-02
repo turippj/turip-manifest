@@ -99,8 +99,7 @@ class AddManifest(webapp2.RequestHandler):
 
 # [ Start SearchManifest ]
 class SearchManifest(webapp2.RequestHandler):
-    def get(self):
-        model = self.request.get('model')
+    def get(self, model):
         manifest = Manifest.query(Manifest.model == long(model)).get()
 
         output_data = OrderedDict()
@@ -139,9 +138,10 @@ class MainHandler(webapp2.RequestHandler):
     def get(self):
         self.response.write('Hello world!')
 
+
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/api/manifest/add_manifest', AddManifest),
-    ('/api/manifest/search_manifest', SearchManifest),
+    ('/api/manifest/search_manifest/(\d+)', SearchManifest),
     ('/upload/manifest', UploadManifestPage)
 ], debug=True)
