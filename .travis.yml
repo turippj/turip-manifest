@@ -17,10 +17,11 @@ script:
 - gcloud version
 - gcloud components install app-engine-python -q
 - py.test main_test.py
-- gcloud config set project turip-manifest
-- gcloud auth activate-service-account --key-file turip-manifest-secret.json
-- gcloud -q app deploy app.yaml --promote
-- gcloud -q datastore create-indexes index.yaml
+
+deploy:
+  provider: gae
+  keyfile: turip-manifest-secret.json
+  project: turip-manifest
 
 notifications:
   slack:
