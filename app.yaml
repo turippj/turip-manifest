@@ -3,7 +3,11 @@ api_version: 1
 threadsafe: true
 
 handlers:
+# Referance HP's Root
 - url: /
+  script: main.app
+
+- url: /api/.*
   script: main.app
 
 - url: /upload/manifest
