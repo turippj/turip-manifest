@@ -17,12 +17,12 @@ script:
 - gcloud version
 - gcloud components install app-engine-python -q
 - py.test main_test.py
+- gcloud config set project turip-manifest
 
 deploy:
   provider: gae
   keyfile: turip-manifest-secret.json
   project: turip-manifest
-  default: true
 
 notifications:
   slack:
