@@ -7,8 +7,12 @@ handlers:
 - url: /
   script: main.app
 
-- url: /api/.*
+- url: /api/manifest/search_manifest/.*
   script: main.app
+
+- url: /api/manifest/add_manifest
+  script: main.app
+  login: admin
 
 - url: /upload/manifest
   script: main.app
