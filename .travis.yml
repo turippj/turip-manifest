@@ -22,6 +22,7 @@ deploy:
   provider: gae
   keyfile: turip-manifest-secret.json
   project: turip-manifest
+  default: true
 
 notifications:
   slack:
