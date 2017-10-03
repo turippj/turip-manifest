@@ -1,6 +1,9 @@
 language: python
 python:
 - 2.7.10
+before_install:
+- openssl aes-256-cbc -K $encrypted_777b63f28009_key -iv $encrypted_777b63f28009_iv
+  -in turip-manifest-secret.json.enc -out turip-manifest-secret.json -d
 install:
 - pip install -r requirements.txt
 cache:
@@ -14,6 +17,12 @@ script:
 - gcloud version
 - gcloud components install app-engine-python -q
 - py.test main_test.py
+
+deploy:
+  provider: gae
+  keyfile: turip-manifest-secret.json
+  project: turip-manifest
+
 notifications:
   slack:
     secure: uxTqjJZG51wnLJq5IIBT8r6OX2NAS3KZ9zI8ckdz3P6JGdE7KZ9q9lTOfX2UyDr3y0OLPxCkSojd7weq5BDOGkqlBM7hJcuDrm36SOACxR1icdTEeKWherh1IBJVJgtjQk13Xd5nqXQcnsag7J1Re23ygBSPVpExWR+sqfiDmt3ad7tHvbb6woHINVoKeT1/s5KdDkgWQoY9wwvSVhKSyR58i5HsBy3SAX3NhzvCm8PB6TdbAlQ4Tjw8y9QHTE8YcoomRx9Al70GnlWeMEhYHuqZ9xuJogKnlBy5mz8ixA/tcII4V/IDKnT77Hx8ipwQjoa9JLHQURfgpz17KJgtp8lnO++pxb2ilPkdb3PQmhEfOzDU3kr0Bt5pOqDU6bEqMPJUMq0thzDt4DKWCyeMIphbPYamlop9ehO3BlAlCJIcXrIphPtHPGkPrayRqdbWrg33YxMqfVs4qvOfB80Yb+bnQ9WR5mU1cs2Azl1soF1nsKnx8rsngS5Avd37Jow9EK74lIvrOzJO3ZNCPHUNQNGflFuuIHC7snzbaRnobYva0AeUo5lLWLz8vCtVm7U35bQYB+wYkEmGiyVUxvQUXX1fl/22fTPe+lKg+PSPiru71q80Q7/15658RIRBhb4PSokZhFBSFukS5ucNb33IqrVTQNJMSbYirUP3pAiNxnM=

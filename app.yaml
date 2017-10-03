@@ -8,6 +8,10 @@ handlers:
 - url: /.*
   script: main.app
 
+- url: /upload/manifest
+  script: main.app
+  login: admin
+
 libraries:
 - name: webapp2
   version: latest

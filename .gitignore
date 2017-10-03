@@ -3,3 +3,4 @@
 *.pyc
 .cache/
 turip-manifest.iml
+turip-manifest-secret.json
