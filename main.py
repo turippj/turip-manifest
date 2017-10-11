@@ -43,22 +43,21 @@ class Manifest(DataTemplate):
     model = ndb.IntegerProperty()
     author = ndb.StringProperty()
 
-    @classmethod
-    def query_manifest(cls):
-        return cls.query().order(cls.model)
-
     # [ port methods ]
     def add(self, content):
-        port = Port(parent=self.key,
-                    number=content['number'],
-                    name=content['name'],
-                    description=content['description'],
-                    permission=content['permission'],
-                    type=content['type'])
-        port.put()
+        if content.get('number') is None or content.get('name') is None or \
+           content.get('description') is None or content.get('permission') is None or content.get('type') is None:
+            return -1
+        else:
+            port = Port(parent=self.key,
+                        number=content['number'],
+                        name=content['name'],
+                        description=content['description'],
+                        permission=content['permission'],
+                        type=content['type'])
+            port.put()
+            return 0
 
-    def delete(self, port):
-        port.key.delete()
 
 # [ End Manifest ]
 
@@ -83,17 +82,25 @@ class AddManifest(webapp2.RequestHandler):
             model_number += 1
             existing_manifest = Manifest.query(Manifest.model == model_number).get()
 
-        manifest = Manifest(
-                    model=model_number,
-                    name=data['name'],
-                    description=data['description'],
-                    author=data['author'])
-        manifest.put()
-
-        for port in data['port']:
-            manifest.add(port)
-
-        self.response.write('Upload Manifest success!')
+        if data.get('name') is None or data.get('description') is None or data.get('author') is None or data.get('port') is None:
+            self.response.write('Your Manifest Data is not correct.')
+        else:
+            manifest = Manifest(
+                        model=model_number,
+                        name=data['name'],
+                        description=data['description'],
+                        author=data['author'])
+            manifest.put()
+            for port in data['port']:
+                if manifest.add(port) != 0:
+                    ports = Port.query(ancestor=manifest.key).fetch()
+                    if ports is not None:
+                        for num in range(len(ports)):
+                            ports[num].key.delete()
+                    manifest.key.delete()
+                    self.response.write('Your Manifest Data is not correct.')
+                    return
+            self.response.write('Upload Manifest success!')
 # [ End AddManifest ]
 
 
@@ -101,6 +108,8 @@ class AddManifest(webapp2.RequestHandler):
 class SearchManifest(webapp2.RequestHandler):
     def get(self, model):
         manifest = Manifest.query(Manifest.model == long(model)).get()
+        if manifest is None:
+            self.response.write("404 Manifest is not found.")
 
         output_data = OrderedDict()
         output_data['model'] = manifest.model
@@ -134,13 +143,7 @@ class UploadManifestPage(webapp2.RequestHandler):
 # [ End AddManifestPage ]
 
 
-class MainHandler(webapp2.RequestHandler):
-    def get(self):
-        self.response.write('Hello world!')
-
-
 app = webapp2.WSGIApplication([
-    ('/', MainHandler),
     ('/api/manifest/add_manifest', AddManifest),
     ('/api/manifest/search_manifest/(\d+)', SearchManifest),
     ('/upload/manifest', UploadManifestPage)
