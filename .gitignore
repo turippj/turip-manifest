@@ -4,3 +4,4 @@
 .cache/
 turip-manifest.iml
 turip-manifest-secret.json
+package-lock.json

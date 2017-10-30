@@ -5,7 +5,12 @@ threadsafe: true
 handlers:
 # Referance HP's Root
 - url: /
-  script: main.app
+  static_files: webapp/index.html
+  upload: webapp/index.html
+
+- url: /index.js
+  static_files: webapp/index.js
+  upload: webapp/index.js
 
 - url: /api/manifest/search_manifest/.*
   script: main.app

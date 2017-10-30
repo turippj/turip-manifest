@@ -110,28 +110,28 @@ class SearchManifest(webapp2.RequestHandler):
         manifest = Manifest.query(Manifest.model == long(model)).get()
         if manifest is None:
             self.response.write("404 Manifest is not found.")
+        else:
+            output_data = OrderedDict()
+            output_data['model'] = manifest.model
+            output_data['name'] = manifest.name
+            output_data['author'] = manifest.author
+            output_data['description'] = manifest.description
+            output_data['port'] = []
 
-        output_data = OrderedDict()
-        output_data['model'] = manifest.model
-        output_data['name'] = manifest.name
-        output_data['author'] = manifest.author
-        output_data['description'] = manifest.description
-        output_data['port'] = []
+            ports = Port.query(ancestor=manifest.key).order(Port.number).fetch()
 
-        ports = Port.query(ancestor=manifest.key).order(Port.number).fetch()
+            for num in range(len(ports)):
+                port = OrderedDict()
+                port['number'] = ports[num].number
+                port['name'] = ports[num].name
+                port['description'] = ports[num].description
+                port['permission'] = ports[num].permission
+                port['type'] = ports[num].type
 
-        for num in range(len(ports)):
-            port = OrderedDict()
-            port['number'] = ports[num].number
-            port['name'] = ports[num].name
-            port['description'] = ports[num].description
-            port['permission'] = ports[num].permission
-            port['type'] = ports[num].type
+                output_data['port'].append(port)
 
-            output_data['port'].append(port)
-
-        output_json = json.dumps(output_data)
-        self.response.write(output_json)
+            output_json = json.dumps(output_data)
+            self.response.write(output_json)
 # [ End SearchManifest ]
 
 
