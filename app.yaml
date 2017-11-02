@@ -12,14 +12,14 @@ handlers:
   static_files: webapp/index.js
   upload: webapp/index.js
 
-- url: /api/manifest/search_manifest/.*
+- url: /api/manifest/search/.*
   script: main.app
 
-- url: /api/manifest/add_manifest
+- url: /api/manifest/add
   script: main.app
   login: admin
 
-- url: /upload/manifest
+- url: /manifest/upload
   script: main.app
   login: admin
 

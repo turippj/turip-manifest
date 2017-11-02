@@ -144,7 +144,7 @@ class UploadManifestPage(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([
-    ('/api/manifest/add_manifest', AddManifest),
-    ('/api/manifest/search_manifest/(\d+)', SearchManifest),
-    ('/upload/manifest', UploadManifestPage)
+    ('/api/manifest/add', AddManifest),
+    ('/api/manifest/search/(\d+)', SearchManifest),
+    ('/manifest/upload', UploadManifestPage)
 ], debug=True)
