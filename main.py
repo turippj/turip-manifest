@@ -109,7 +109,7 @@ class SearchManifest(webapp2.RequestHandler):
     def get(self, model):
         manifest = Manifest.query(Manifest.model == long(model)).get()
         if manifest is None:
-            self.response.write("404 Manifest is not found.")
+            self.response.write("404")
         else:
             output_data = OrderedDict()
             output_data['model'] = manifest.model
