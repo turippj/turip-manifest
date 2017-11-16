@@ -2,7 +2,8 @@
   <main class="mdl-layout__content">
     <div class="page-content">
       <search></search>
-      <card v-if="manifest != Object" :manifest="manifest"></card>
+      <card v-if="manifest != Object && manifest != 404" :manifest="manifest"></card>
+      <p v-if="manifest == 404">Manifest is not found.</p>
     </div>
   </main>
 </template>
@@ -31,5 +32,9 @@
   .page-content {
     display: flex;
     flex-direction: column;
+  }
+  p {
+    font-size: 20px;
+    margin: 30px auto;
   }
 </style>
