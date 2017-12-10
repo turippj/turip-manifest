@@ -107,12 +107,12 @@ class AddManifest(webapp2.RequestHandler):
 # [ Start SearchManifest ]
 class SearchManifest(webapp2.RequestHandler):
     def get(self, model):
-        manifest = Manifest.query(Manifest.model == long(model)).get()
+        manifest = Manifest.query(Manifest.model == long(model, 16)).get()
         if manifest is None:
             self.response.write("404")
         else:
             output_data = OrderedDict()
-            output_data['model'] = manifest.model
+            output_data['model'] = hex(manifest.model)
             output_data['name'] = manifest.name
             output_data['author'] = manifest.author
             output_data['description'] = manifest.description
@@ -145,6 +145,6 @@ class UploadManifestPage(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/api/manifest/add', AddManifest),
-    ('/api/manifest/search/(\d+)', SearchManifest),
-    ('/manifest/upload', UploadManifestPage)
+    ('/manifest/upload', UploadManifestPage),
+    ('/(\w+)', SearchManifest)
 ], debug=True)
