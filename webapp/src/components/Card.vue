@@ -11,7 +11,7 @@
     </li>
     <li class="mdl-list__item mdl-list__item">
     <span class="mdl-list__item-primary-content">
-      <span>Author : {{manifest["author"]}}</span>
+      Interface:&nbsp;<span v-for='item in manifest["interface"]'> {{ item }}&nbsp;</span>
     </span>
     </li>
     <li class="mdl-list__item mdl-list__item">
