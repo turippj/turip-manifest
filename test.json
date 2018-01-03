@@ -1,7 +1,8 @@
 {
-  "author":"tkage3",
   "name":"TURIP pot LED",
+  "protocol": "TURIP0.20",
   "description":"TURIP pot full color LED module.",
+  "interface":["spi", "HTTP"],
   "port":[
     {
       "number":1,

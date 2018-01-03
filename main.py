@@ -38,10 +38,23 @@ class DataTemplate(ndb.Model):
 # [ End DataTemplate ]
 
 
+# [ Start Interface ]
+class Interface(ndb.Model):
+    type = ndb.StringProperty()
+
+    # [START query]
+    @classmethod
+    def query_interface(cls):
+        return cls.query().order()
+    # [END query]
+# [ Start Interface ]
+
+
 # [ Start Manifest ]
 class Manifest(DataTemplate):
+    protocol = ndb.StringProperty()
     model = ndb.IntegerProperty()
-    author = ndb.StringProperty()
+    interface = ndb.KeyProperty(kind=Interface, repeated=True)
 
     # [ port methods ]
     def add(self, content):
@@ -82,15 +95,32 @@ class AddManifest(webapp2.RequestHandler):
             model_number += 1
             existing_manifest = Manifest.query(Manifest.model == model_number).get()
 
-        if data.get('name') is None or data.get('description') is None or data.get('author') is None or data.get('port') is None:
+
+        interface_string = data.get('interface')
+        interfaces = []
+        for interface in interface_string:
+            existing_interface = Interface.query(Interface.type == interface).get()
+            if existing_interface is None:
+                new_interface = Interface(type=interface)
+                interfaces.append(new_interface.put())
+            else:
+                interfaces.append(existing_interface.key)
+
+
+        if data.get('name') is None or data.get('description') is None or data.get('protocol') is None or data.get('port') is None:
             self.response.write('Your Manifest Data is not correct.')
+
         else:
             manifest = Manifest(
                         model=model_number,
                         name=data['name'],
                         description=data['description'],
-                        author=data['author'])
+                        protocol=data['protocol']
+                        )
+            for interface in interfaces:
+                manifest.interface.append(interface)
             manifest.put()
+
             for port in data['port']:
                 if manifest.add(port) != 0:
                     ports = Port.query(ancestor=manifest.key).fetch()
@@ -104,19 +134,24 @@ class AddManifest(webapp2.RequestHandler):
 # [ End AddManifest ]
 
 
-# [ Start SearchManifest ]
-class SearchManifest(webapp2.RequestHandler):
+# [ Start SearchManifestByNumber ]
+class SearchManifestByNumber(webapp2.RequestHandler):
     def get(self, model):
         manifest = Manifest.query(Manifest.model == long(model, 16)).get()
         if manifest is None:
             self.response.write("404")
         else:
             output_data = OrderedDict()
-            output_data['model'] = hex(manifest.model)
+            output_data['model'] = hex(manifest.model).replace('0x', '')
             output_data['name'] = manifest.name
-            output_data['author'] = manifest.author
+            output_data['interface'] = manifest.interface
             output_data['description'] = manifest.description
+            output_data['interface'] = []
             output_data['port'] = []
+
+            for interface in manifest.interface:
+                interface_data = interface.get()
+                output_data['interface'].append(interface_data.type)
 
             ports = Port.query(ancestor=manifest.key).order(Port.number).fetch()
 
@@ -146,5 +181,5 @@ class UploadManifestPage(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/api/manifest/add', AddManifest),
     ('/manifest/upload', UploadManifestPage),
-    ('/(\w+)', SearchManifest)
+    ('/(\w+)', SearchManifestByNumber)
 ], debug=True)

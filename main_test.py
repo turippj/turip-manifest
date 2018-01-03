@@ -25,7 +25,7 @@ class TestHandlers(unittest.TestCase):
         self.assertEqual(response.body, 'Upload Manifest success!')
 
         # SearchManifest Test
-        request = webapp2.Request.blank('/0xffff')
+        request = webapp2.Request.blank('/ffff')
         response = request.get_response(main.app)
         self.assertEqual(response.status_int, 200)
 
