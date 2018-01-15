@@ -9,7 +9,7 @@ Vue.use(Vuex)
 
 function getManifest (query) {
   const params = encodeURIComponent(query)
-  return fetch('https://turip-manifest.appspot.com/' + params)
+  return fetch('https://manifest.turip.org/' + params)
     .then( res => res.json())
 }
 
