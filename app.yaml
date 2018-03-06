@@ -14,6 +14,10 @@ handlers:
 - url: /.*
   script: main.app
 
+- url: /admin/console/.*
+  script: google.appengine.ext.admin.application
+  login: admin
+
 - url: /api/manifest/add
   script: main.app
   login: admin
