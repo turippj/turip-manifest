@@ -1,28 +1,10 @@
-#!/usr/bin/env python
-#
-# Copyright 2007 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
 import os
-import cgi
-import urllib
 import json
 import webapp2
 import jinja2
 from collections import OrderedDict
 from google.appengine.ext import ndb
+from google.appengine.api import search
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -67,7 +49,8 @@ class Manifest(DataTemplate):
                         name=content['name'],
                         description=content['description'],
                         permission=content['permission'],
-                        type=content['type'])
+                        type=content['type']
+                    )
             port.put()
             return 0
 
@@ -111,14 +94,24 @@ class AddManifest(webapp2.RequestHandler):
             self.response.write('Your Manifest Data is not correct.')
 
         else:
-            manifest = Manifest(
-                        model=model_number,
-                        name=data['name'],
-                        description=data['description'],
-                        protocol=data['protocol']
-                        )
+            manifest = Manifest(model=model_number,
+                                name=data['name'],
+                                description=data['description'],
+                                protocol=data['protocol'])
+
             for interface in interfaces:
                 manifest.interface.append(interface)
+
+            document = search.Document(
+                fields=[
+                    search.TextField(name='model', value=hex(model_number).replace('0x', '')),
+                    search.TextField(name='name', value=data['name']),
+                    search.TextField(name='description', value=data['description']),
+                    search.TextField(name='protocol', value=data['protocol']),
+                ])
+            index = search.Index('manifest')
+
+            index.put(document)
             manifest.put()
 
             for port in data['port']:
@@ -169,6 +162,26 @@ class SearchManifestByNumber(webapp2.RequestHandler):
             self.response.write(output_json)
 # [ End SearchManifest ]
 
+# [ Start SearchManifestByKeyword ]
+class SearchManifestByKeyword(webapp2.RequestHandler):
+    def get(self):
+        category = self.request.get("category")
+        keyword = self.request.get("keyword")
+
+        index = search.Index('manifest')
+        query_string = category + ': ' + keyword
+
+        results = index.search(query_string)
+        searchResults = []
+
+        for result in results:
+            datas = {}
+            for data in result.fields:
+                datas[data.name.encode('utf-8')] = data.value.encode('utf-8')
+            searchResults.append(datas)
+        self.response.write(json.dumps(searchResults))
+
+# [ End SearchManifestByKeyword ]
 
 # [ Start AddManifestPage ]
 class UploadManifestPage(webapp2.RequestHandler):
@@ -180,6 +193,7 @@ class UploadManifestPage(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/api/manifest/add', AddManifest),
+    ('/api/manifest/search', SearchManifestByKeyword),
     ('/manifest/upload', UploadManifestPage),
     ('/(\w+)', SearchManifestByNumber)
 ], debug=True)

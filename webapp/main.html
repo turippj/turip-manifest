@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TURIP Manifest Search</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/siimple@3.0.0/dist/siimple.min.css">
+</head>
+<body>
+    <div class="siimple-jumbotron  siimple-jumbotron--orange" align="center">
+        <div class="siimple-jumbotron-title">TURIP Manifest Portal</div>
+        <div class="siimple-jumbotron-detail">You can research about <a href="https://github.com/turippj/TURIP" class="siimple-link">TURIP</a> modules' Manifest.</div>
+    </div>
+
+    <br>
+
+    <div id="searchBox">
+        <div class="siimple-grid">
+            <div class="siimple-grid-row">
+                <div class="siimple-form">
+                    <div class="siimple-grid-col siimple-grid-col--12">
+                        <div class="siimple-form-title" align="center">Search Manifest</div>
+                        <div class="siimple-form-detail" align="center">Please choice the category of the keyword & type keyword.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="siimple-grid-row">
+                <div class="siimple-grid-col siimple-grid-col--12">
+                    <div class="siimple-form-field" align="center">
+                        <input type="radio" id="model" value="model" v-model="category">
+                        <label for="model">ModelNumber</label>
+                        <input type="radio" id="name" value="name" v-model="category">
+                        <label for="name">Name</label>
+                        <input type="radio" id="description" value="description" v-model="category">
+                        <label for="description">Keyword</label>
+                    </div>
+                </div>
+            </div>
+            <div class="siimple-grid-row">
+                <div class="siimple-form-field">
+                    <div align="center">
+                        <input v-model="keyword" class="siimple-input" placeholder="type search word">
+                        <button v-on:click="search" class="siimple-btn siimple-btn--orange">Search</button>
+                        <div>{{ errorMessage }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="searchResult">
+        <div v-for="data in result">
+            <div class="siimple-grid-row" align="center">
+                <manifest-card :data="data"></manifest-card>
+            </div>
+        </div>
+    </div>
+    <div class="siimple-footer" align="center">
+        Made by TURIP Comunity
+    </div>
+    <script src="/static/renderer.js"></script>
+</body>
+</html>
