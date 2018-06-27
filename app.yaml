@@ -22,6 +22,10 @@ handlers:
   script: main.app
   login: admin
 
+- url: /api/search/delete
+  script: main.app
+  login: admin
+
 - url: /manifest/upload
   script: main.app
   login: admin

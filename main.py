@@ -6,7 +6,6 @@ from collections import OrderedDict
 from google.appengine.ext import ndb
 from google.appengine.api import search
 
-
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
@@ -17,6 +16,8 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 class DataTemplate(ndb.Model):
     name = ndb.StringProperty()
     description = ndb.StringProperty()
+
+
 # [ End DataTemplate ]
 
 
@@ -29,6 +30,8 @@ class Interface(ndb.Model):
     def query_interface(cls):
         return cls.query().order()
     # [END query]
+
+
 # [ Start Interface ]
 
 
@@ -41,7 +44,7 @@ class Manifest(DataTemplate):
     # [ port methods ]
     def add(self, content):
         if content.get('number') is None or content.get('name') is None or \
-           content.get('description') is None or content.get('permission') is None or content.get('type') is None:
+                content.get('description') is None or content.get('permission') is None or content.get('type') is None:
             return -1
         else:
             port = Port(parent=self.key,
@@ -50,7 +53,7 @@ class Manifest(DataTemplate):
                         description=content['description'],
                         permission=content['permission'],
                         type=content['type']
-                    )
+                        )
             port.put()
             return 0
 
@@ -63,6 +66,8 @@ class Port(DataTemplate):
     number = ndb.IntegerProperty()
     permission = ndb.StringProperty()
     type = ndb.StringProperty()
+
+
 # [ End Port ]
 
 
@@ -78,7 +83,6 @@ class AddManifest(webapp2.RequestHandler):
             model_number += 1
             existing_manifest = Manifest.query(Manifest.model == model_number).get()
 
-
         interface_string = data.get('interface')
         interfaces = []
         for interface in interface_string:
@@ -89,8 +93,8 @@ class AddManifest(webapp2.RequestHandler):
             else:
                 interfaces.append(existing_interface.key)
 
-
-        if data.get('name') is None or data.get('description') is None or data.get('protocol') is None or data.get('port') is None:
+        if data.get('name') is None or data.get('description') is None or data.get('protocol') is None or data.get(
+                'port') is None:
             self.response.write('Your Manifest Data is not correct.')
 
         else:
@@ -124,6 +128,8 @@ class AddManifest(webapp2.RequestHandler):
                     self.response.write('Your Manifest Data is not correct.')
                     return
             self.response.write('Upload Manifest success!')
+
+
 # [ End AddManifest ]
 
 
@@ -160,6 +166,8 @@ class SearchManifestByNumber(webapp2.RequestHandler):
 
             output_json = json.dumps(output_data)
             self.response.write(output_json)
+
+
 # [ End SearchManifest ]
 
 # [ Start SearchManifestByKeyword ]
@@ -181,6 +189,7 @@ class SearchManifestByKeyword(webapp2.RequestHandler):
             searchResults.append(datas)
         self.response.write(json.dumps(searchResults))
 
+
 # [ End SearchManifestByKeyword ]
 
 # [ Start AddManifestPage ]
@@ -188,12 +197,23 @@ class UploadManifestPage(webapp2.RequestHandler):
     def get(self):
         template = JINJA_ENVIRONMENT.get_template('manifest.html')
         self.response.write(template.render())
+
+
 # [ End AddManifestPage ]
+
+
+class DeleteIndex(webapp2.RequestHandler):
+    def get(self):
+        document_id = self.request.get("document_id")
+        index = search.Index('manifest')
+        index.delete(document_id)
+        self.response.write('Delete success!')
 
 
 app = webapp2.WSGIApplication([
     ('/api/manifest/add', AddManifest),
     ('/api/manifest/search', SearchManifestByKeyword),
+    ('/api/search/delete', DeleteIndex),
     ('/manifest/upload', UploadManifestPage),
     ('/(\w+)', SearchManifestByNumber)
 ], debug=True)
